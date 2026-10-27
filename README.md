@@ -20,6 +20,8 @@ src/
 ├── controllers/
 │   ├── auth.controller.js       # Register, login, refresh-token, logout, getProfile
 │   └── task.controller.js       # Complete task CRUD + admin oversight
+├── docs/
+│   └── swagger.js               # OpenAPI 3.0 specification for Swagger UI
 ├── middlewares/
 │   ├── auth.middleware.js       # JWT Bearer verification & user injection
 │   ├── error.middleware.js      # Global error handler (CastError, duplicate key 11000, Zod, JWT)
@@ -456,6 +458,20 @@ npm test
 # or
 npm run verify
 ```
+
+---
+
+## 📖 Swagger Interactive API Documentation
+
+Interactive Swagger UI documentation is built-in and accessible directly in your browser:
+
+- **Swagger UI URL**: [http://localhost:5000/api/docs](http://localhost:5000/api/docs)
+- **Convenience Redirect**: [http://localhost:5000/docs](http://localhost:5000/docs)
+
+### Swagger Features:
+- **Try It Out**: Interactive execution directly from your browser.
+- **Authorize with JWT**: Click the green **Authorize** button in Swagger UI, enter `Bearer <your_token>`, and test all protected task endpoints seamlessly.
+- **Comprehensive Schemas**: Complete request bodies, parameter validation rules, status codes, and error models defined in OpenAPI 3.0 format.
 
 ---
 
