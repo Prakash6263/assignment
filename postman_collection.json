@@ -38,14 +38,14 @@
           "host": ["{{baseUrl}}"],
           "path": ["health"]
         },
-        "description": "Verify that API service is online and healthy"
+        "description": "Verify that API service is operational and healthy"
       }
     },
     {
       "name": "Authentication",
       "item": [
         {
-          "name": "Register User",
+          "name": "Register User (Default: USER Role)",
           "event": [
             {
               "listen": "test",
@@ -59,7 +59,7 @@
                   "    if (response.data.refreshToken) {",
                   "        pm.collectionVariables.set('refreshToken', response.data.refreshToken);",
                   "    }",
-                  "    console.log('Tokens updated in collection variables');",
+                  "    console.log('User tokens updated in collection variables');",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -76,14 +76,56 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Prakash Developer\",\n  \"email\": \"prakash.dev@example.com\",\n  \"password\": \"Password123\",\n  \"role\": \"USER\"\n}"
+              "raw": "{\n  \"name\": \"Prakash Developer\",\n  \"email\": \"prakash.user@example.com\",\n  \"password\": \"Password123\",\n  \"role\": \"USER\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/auth/register",
               "host": ["{{baseUrl}}"],
               "path": ["auth", "register"]
             },
-            "description": "Registers a new user and sets accessToken & refreshToken in collection variables"
+            "description": "Registers a new user and automatically updates accessToken & refreshToken in collection variables"
+          }
+        },
+        {
+          "name": "Register Admin User (ADMIN Role)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.success && response.data) {",
+                  "    if (response.data.accessToken) {",
+                  "        pm.collectionVariables.set('accessToken', response.data.accessToken);",
+                  "    }",
+                  "    if (response.data.refreshToken) {",
+                  "        pm.collectionVariables.set('refreshToken', response.data.refreshToken);",
+                  "    }",
+                  "    console.log('Admin tokens updated in collection variables');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"System Administrator\",\n  \"email\": \"prakash.admin@example.com\",\n  \"password\": \"AdminPassword123!\",\n  \"role\": \"ADMIN\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Registers an administrator account (useful to test role-protected routes like /api/tasks/admin/all)"
           }
         },
         {
@@ -118,7 +160,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"prakash.dev@example.com\",\n  \"password\": \"Password123\"\n}"
+              "raw": "{\n  \"email\": \"prakash.user@example.com\",\n  \"password\": \"Password123\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/auth/login",
@@ -352,7 +394,39 @@
           }
         },
         {
-          "name": "Update Task (PUT/PATCH)",
+          "name": "Update Task (PUT - Full Update)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Complete Node.js REST API Assignment (Updated)\",\n  \"description\": \"Fully completed and verified all requirements\",\n  \"priority\": \"high\",\n  \"status\": \"completed\",\n  \"dueDate\": \"2026-11-05T12:00:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "{{taskId}}"]
+            },
+            "description": "Updates all allowed fields on the task. User can update only their own task."
+          }
+        },
+        {
+          "name": "Update Task (PATCH - Partial Update)",
           "request": {
             "auth": {
               "type": "bearer",
@@ -380,7 +454,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["tasks", "{{taskId}}"]
             },
-            "description": "Updates allowed fields on the task. User can update only their own task."
+            "description": "Partially updates specific allowed fields on the task. User can update only their own task."
           }
         },
         {
@@ -433,15 +507,30 @@
               "query": [
                 {
                   "key": "page",
-                  "value": "1"
+                  "value": "1",
+                  "description": "Page number"
                 },
                 {
                   "key": "limit",
-                  "value": "20"
+                  "value": "20",
+                  "description": "Items per page"
+                },
+                {
+                  "key": "status",
+                  "value": "completed",
+                  "description": "Filter by status",
+                  "disabled": true
+                },
+                {
+                  "key": "priority",
+                  "value": "high",
+                  "description": "Filter by priority",
+                  "disabled": true
                 },
                 {
                   "key": "sortBy",
-                  "value": "createdAt:desc"
+                  "value": "createdAt:desc",
+                  "description": "Sort format <field>:<asc|desc>"
                 }
               ]
             },
