@@ -72,16 +72,15 @@ const userSchema = new mongoose.Schema(
 );
 
 /**
- * Pre-save middleware to hash password securely using bcrypt
+ * Pre-save hook to hash password securely using bcrypt (Mongoose 8+ async hook)
  */
-userSchema.pre('save', async function (next) {
+userSchema.pre('save', async function () {
   if (!this.isModified('password')) {
-    return next();
+    return;
   }
 
   const saltRounds = 10;
   this.password = await bcrypt.hash(this.password, saltRounds);
-  next();
 });
 
 /**
