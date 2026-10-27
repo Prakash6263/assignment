@@ -447,9 +447,40 @@ curl -X GET "http://localhost:5000/api/tasks?sortBy=createdAt:desc" \
 
 ---
 
-## 🧪 Testing
+## 🧪 Automated Testing
 
-Run the automated test suite to verify 28 points of compliance:
+The project includes two complementary test suites:
+
 ```bash
+# 1. Run Supertest API Integration Tests (30 tests: endpoints, rate-limiting, 404s, auth, RBAC)
+npm test
+
+# 2. Run Comprehensive Requirement Compliance Suite (28 tests: Zod, bcrypt, isolation, CastError)
 npm run verify
 ```
+
+---
+
+## 📬 Postman Collection
+
+A complete, ready-to-import Postman Collection v2.1.0 is available in the root directory: [`postman_collection.json`](file:///d:/assignment/postman_collection.json).
+
+### Features of the Postman Collection:
+- **Organized Folders**: `Health Check`, `Authentication`, `Tasks (CRUD)`, `Admin`.
+- **Pre-configured Environment Variables**:
+  - `baseUrl` (`http://localhost:5000/api`)
+  - `accessToken`
+  - `refreshToken`
+  - `taskId`
+- **Automated Token Management**: The collection includes Postman test scripts on `Register User`, `Login User`, `Refresh Access Token`, and `Create Task` that **automatically capture and store** `accessToken`, `refreshToken`, and `taskId` in collection variables for all subsequent requests!
+
+### How to Import & Use in Postman:
+1. Open Postman.
+2. Click **Import** (top left).
+3. Drag & drop [`postman_collection.json`](file:///d:/assignment/postman_collection.json) or choose the file.
+4. Run the requests in order:
+   - **Register User** or **Login User** (tokens are automatically stored)
+   - **Get Profile (Me)**
+   - **Create Task** (taskId is automatically stored)
+   - **List Tasks**, **Get Task by ID**, **Update Task**, **Delete Task**
+

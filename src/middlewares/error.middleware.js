@@ -36,6 +36,18 @@ const handleValidationErrorDB = (err) => {
 };
 
 /**
+ * Handle Zod validation errors
+ */
+const handleZodError = (err) => {
+  const issues = err.issues || [];
+  const errors = issues.map((issue) => ({
+    field: issue.path.join('.') || 'field',
+    message: issue.message,
+  }));
+  return new AppError('Validation failed', HTTP_STATUS.BAD_REQUEST, errors);
+};
+
+/**
  * Handle JWT invalid signature
  */
 const handleJWTError = () => {
@@ -54,37 +66,55 @@ const handleJWTExpiredError = () => {
  */
 // eslint-disable-next-line no-unused-vars
 const errorHandler = (err, req, res, next) => {
-  err.statusCode = err.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
-
-  let error = { ...err };
-  error.message = err.message;
-  error.name = err.name;
-  error.code = err.code;
+  let statusCode = err.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
+  let message = err.message || 'Internal server error occurred';
+  let errors = err.errors || null;
 
   // Handle specific database and runtime exceptions
-  if (err.name === 'CastError') error = handleCastErrorDB(err);
-  if (err.code === 11000) error = handleDuplicateFieldsDB(err);
-  if (err.name === 'ValidationError') error = handleValidationErrorDB(err);
-  if (err.name === 'JsonWebTokenError') error = handleJWTError();
-  if (err.name === 'TokenExpiredError') error = handleJWTExpiredError();
-  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
-    error = new AppError('Malformed JSON payload in request body.', HTTP_STATUS.BAD_REQUEST);
+  if (err.name === 'CastError') {
+    const customErr = handleCastErrorDB(err);
+    statusCode = customErr.statusCode;
+    message = customErr.message;
+    errors = customErr.errors;
+  } else if (err.code === 11000) {
+    const customErr = handleDuplicateFieldsDB(err);
+    statusCode = customErr.statusCode;
+    message = customErr.message;
+    errors = customErr.errors;
+  } else if (err.name === 'ValidationError') {
+    const customErr = handleValidationErrorDB(err);
+    statusCode = customErr.statusCode;
+    message = customErr.message;
+    errors = customErr.errors;
+  } else if (err.name === 'ZodError') {
+    const customErr = handleZodError(err);
+    statusCode = customErr.statusCode;
+    message = customErr.message;
+    errors = customErr.errors;
+  } else if (err.name === 'JsonWebTokenError') {
+    const customErr = handleJWTError();
+    statusCode = customErr.statusCode;
+    message = customErr.message;
+  } else if (err.name === 'TokenExpiredError') {
+    const customErr = handleJWTExpiredError();
+    statusCode = customErr.statusCode;
+    message = customErr.message;
+  } else if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    statusCode = HTTP_STATUS.BAD_REQUEST;
+    message = 'Malformed JSON payload in request body.';
   }
-
-  const statusCode = error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
-  const message = error.message || 'Internal server error occurred';
 
   const responsePayload = {
     success: false,
     message,
   };
 
-  if (error.errors) {
-    responsePayload.errors = error.errors;
+  if (errors) {
+    responsePayload.errors = errors;
   }
 
-  // Include stack trace only in development mode for debugging
-  if (envConfig.isDevelopment) {
+  // Include stack trace only in development mode for unhandled server errors
+  if (envConfig.isDevelopment && statusCode >= 500) {
     responsePayload.stack = err.stack;
   }
 

@@ -1,0 +1,454 @@
+{
+  "info": {
+    "_postman_id": "a9b8c7d6-e5f4-4321-abcd-ef0123456789",
+    "name": "Task Management REST API",
+    "description": "Production-grade RESTful API collection for Authentication, User Profile, and Task CRUD management with RBAC and refresh token lifecycle.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "taskId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        },
+        "description": "Verify that API service is online and healthy"
+      }
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.success && response.data) {",
+                  "    if (response.data.accessToken) {",
+                  "        pm.collectionVariables.set('accessToken', response.data.accessToken);",
+                  "    }",
+                  "    if (response.data.refreshToken) {",
+                  "        pm.collectionVariables.set('refreshToken', response.data.refreshToken);",
+                  "    }",
+                  "    console.log('Tokens updated in collection variables');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Prakash Developer\",\n  \"email\": \"prakash.dev@example.com\",\n  \"password\": \"Password123\",\n  \"role\": \"USER\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Registers a new user and sets accessToken & refreshToken in collection variables"
+          }
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.success && response.data) {",
+                  "    if (response.data.accessToken) {",
+                  "        pm.collectionVariables.set('accessToken', response.data.accessToken);",
+                  "    }",
+                  "    if (response.data.refreshToken) {",
+                  "        pm.collectionVariables.set('refreshToken', response.data.refreshToken);",
+                  "    }",
+                  "    console.log('Tokens updated in collection variables');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"prakash.dev@example.com\",\n  \"password\": \"Password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Authenticates user and returns JWT access & refresh tokens. Rate limited to 5 attempts / 15m."
+          }
+        },
+        {
+          "name": "Refresh Access Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.success && response.data) {",
+                  "    if (response.data.accessToken) {",
+                  "        pm.collectionVariables.set('accessToken', response.data.accessToken);",
+                  "    }",
+                  "    if (response.data.refreshToken) {",
+                  "        pm.collectionVariables.set('refreshToken', response.data.refreshToken);",
+                  "    }",
+                  "    console.log('Tokens rotated and updated');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh-token",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refresh-token"]
+            },
+            "description": "Rotates refresh token and issues a fresh short-lived access token"
+          }
+        },
+        {
+          "name": "Get Profile (Me)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Returns current authenticated user profile without password or internal keys"
+          }
+        },
+        {
+          "name": "Logout User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "logout"]
+            },
+            "description": "Invalidates the active refresh token in the database"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tasks (CRUD)",
+      "item": [
+        {
+          "name": "Create Task",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.success && response.data) {",
+                  "    const id = response.data.id || response.data._id;",
+                  "    if (id) {",
+                  "        pm.collectionVariables.set('taskId', id);",
+                  "        console.log('Saved taskId to collection variables:', id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Complete Node.js REST API Assignment\",\n  \"description\": \"Build authentication, CRUD operations, Zod validation, and security best practices\",\n  \"priority\": \"high\",\n  \"status\": \"in-progress\",\n  \"dueDate\": \"2026-11-01T18:00:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks"]
+            },
+            "description": "Creates a new task associated with the authenticated user and stores taskId in collection variables"
+          }
+        },
+        {
+          "name": "List Tasks (With Filters & Sorting)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks?page=1&limit=10&status=in-progress&sortBy=dueDate:asc",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default: 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Items per page (1-100)"
+                },
+                {
+                  "key": "status",
+                  "value": "in-progress",
+                  "description": "pending | in-progress | completed"
+                },
+                {
+                  "key": "priority",
+                  "value": "high",
+                  "description": "low | medium | high",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "Node.js",
+                  "description": "Keyword search across title and description",
+                  "disabled": true
+                },
+                {
+                  "key": "sortBy",
+                  "value": "dueDate:asc",
+                  "description": "dueDate:asc | dueDate:desc | createdAt:desc | createdAt:asc"
+                }
+              ]
+            },
+            "description": "Lists only the logged-in user's tasks with pagination, search, status filters, and sorting"
+          }
+        },
+        {
+          "name": "Get Task by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "{{taskId}}"]
+            },
+            "description": "Retrieves task by ID. User can access only their own task (returns 404 if not found or unauthorized)."
+          }
+        },
+        {
+          "name": "Update Task (PUT/PATCH)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"completed\",\n  \"priority\": \"medium\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "{{taskId}}"]
+            },
+            "description": "Updates allowed fields on the task. User can update only their own task."
+          }
+        },
+        {
+          "name": "Delete Task",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "{{taskId}}"]
+            },
+            "description": "Deletes the task. User can delete only their own task."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "List All Tasks Across Users (Admin Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/admin/all?page=1&limit=20&sortBy=createdAt:desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["tasks", "admin", "all"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "createdAt:desc"
+                }
+              ]
+            },
+            "description": "Admin-only endpoint to inspect all tasks in the system across all users with user metadata populated. Requires role: ADMIN."
+          }
+        }
+      ]
+    }
+  ]
+}

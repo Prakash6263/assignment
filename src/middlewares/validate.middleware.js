@@ -11,24 +11,23 @@ const HTTP_STATUS = require('../constants/httpStatusCodes');
  */
 const validate = (schema, source = 'body') => {
   return (req, res, next) => {
-    try {
-      const parsed = schema.parse(req[source]);
-      // Replace with sanitized & typed data from Zod
-      req[source] = parsed;
-      next();
-    } catch (err) {
-      if (err.errors) {
-        const formattedErrors = err.errors.map((e) => ({
-          field: e.path.join('.') || source,
-          message: e.message,
-        }));
+    const result = schema.safeParse(req[source]);
 
-        return next(
-          new AppError('Validation failed', HTTP_STATUS.BAD_REQUEST, formattedErrors)
-        );
-      }
-      next(err);
+    if (!result.success) {
+      const issues = result.error.issues || [];
+      const formattedErrors = issues.map((issue) => ({
+        field: issue.path.join('.') || source,
+        message: issue.message,
+      }));
+
+      return next(
+        new AppError('Validation failed', HTTP_STATUS.BAD_REQUEST, formattedErrors)
+      );
     }
+
+    // Replace with sanitized & typed data from Zod
+    req[source] = result.data;
+    next();
   };
 };
 
