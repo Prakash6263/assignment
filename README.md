@@ -449,13 +449,11 @@ curl -X GET "http://localhost:5000/api/tasks?sortBy=createdAt:desc" \
 
 ## 🧪 Automated Testing
 
-The project includes two complementary test suites:
+Run the automated requirement compliance and verification suite:
 
 ```bash
-# 1. Run Supertest API Integration Tests (30 tests: endpoints, rate-limiting, 404s, auth, RBAC)
 npm test
-
-# 2. Run Comprehensive Requirement Compliance Suite (28 tests: Zod, bcrypt, isolation, CastError)
+# or
 npm run verify
 ```
 

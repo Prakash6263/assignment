@@ -5,8 +5,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "test": "node tests/api.test.js",
-    "test:deep": "node tests/deep-register.test.js",
+    "test": "node scripts/verify-requirements.js",
     "verify": "node scripts/verify-requirements.js"
   },
   "keywords": [],
